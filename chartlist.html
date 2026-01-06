@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ECharts & amCharts Index Dashboard</title>
+    <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    
+    <style>
+        :root {
+            --main-yellow: #FFD93D;
+            --soft-yellow: #FFF9DE;
+            --bg-light: #f8f9fa;
+            --sidebar-border: #eee;
+        }
+
+        body { 
+            margin: 0; display: flex; height: 100vh; 
+            font-family: 'Pretendard', sans-serif; 
+            background: var(--bg-light);
+            color: #333;
+        }
+        
+        /* 사이드바 스타일 */
+        #sidebar { 
+            width: 280px; background: #fff; 
+            border-right: 1px solid var(--sidebar-border);
+            display: flex; flex-direction: column;
+        }
+        #sidebar h2 { 
+            padding: 30px 20px; margin: 0; font-size: 1.1rem; 
+            color: #d4a017; text-align: center; font-weight: 800;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        .menu-section { 
+            padding: 20px 25px 10px; font-size: 11px; 
+            color: #bbb; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; 
+        }
+        #menu-list { list-style: none; padding: 0 15px; margin: 0; }
+        .menu-item { 
+            padding: 12px 20px; cursor: pointer; border-radius: 12px; 
+            font-size: 13.5px; margin-bottom: 5px; transition: 0.2s ease;
+            color: #555;
+        }
+        .menu-item:hover { background: var(--soft-yellow); }
+        .menu-item.active { 
+            background: var(--main-yellow); color: #000; font-weight: 700;
+            box-shadow: 0 4px 12px rgba(255, 217, 61, 0.3);
+        }
+
+        /* 메인 컨텐츠 영역 */
+        #main-content { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
+        .chart-card { 
+            width: 100%; max-width: 950px; height: 600px; background: #fff; 
+            border-radius: 30px; box-shadow: 0 15px 50px rgba(0,0,0,0.05); 
+            padding: 40px; box-sizing: border-box; position: relative;
+        }
+        #chart-div { width: 100%; height: 100%; }
+        
+        .library-tag { 
+            position: absolute; top: 25px; right: 30px; padding: 5px 15px; 
+            border-radius: 20px; font-size: 10px; font-weight: bold; color: white; z-index: 10;
+        }
+        .tag-echarts { background: #5470c6; }
+        .tag-amcharts { background: #67b7dc; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>CHART LIST</h2>
+    <div class="menu-section">ECharts Edition</div>
+    <ul id="menu-list-echarts"></ul>
+    <div class="menu-section" style="margin-top: 15px;">amCharts Edition</div>
+    <ul id="menu-list-amcharts"></ul>
+</div>
+
+<div id="main-content">
+    <div class="chart-card">
+        <div id="lib-badge" class="library-tag"></div>
+        <div id="chart-div"></div>
+    </div>
+</div>
+
+<script>
+    let echartInstance = null;
+    let amRoot = null;
+
+    // 차트 이름으로 리스트업된 목차 데이터
+    const chartConfigs = [
+        { lib: 'ECharts', title: 'Smooth Line Chart', type: 'line' },
+        { lib: 'ECharts', title: 'Rounded Bar Chart', type: 'bar' },
+        { lib: 'ECharts', title: 'Doughnut Pie Chart', type: 'pie' },
+        { lib: 'amCharts', title: 'XY Area Chart', type: 'area' },
+        { lib: 'amCharts', title: 'Sliced Donut Chart', type: 'donut' }
+    ];
+
+    function initChart(index) {
+        const config = chartConfigs[index];
+        const container = document.getElementById('chart-div');
+        const badge = document.getElementById('lib-badge');
+        
+        if (echartInstance) { echartInstance.dispose(); echartInstance = null; }
+        if (amRoot) { amRoot.dispose(); amRoot = null; }
+        container.innerHTML = "";
+        
+        badge.innerText = config.lib;
+        badge.className = `library-tag tag-${config.lib.toLowerCase()}`;
+
+        if (config.lib === 'ECharts') renderECharts(container, config.type);
+        else renderAmCharts(container, config.type);
+
+        document.querySelectorAll('.menu-item').forEach((item, i) => {
+            item.classList.toggle('active', i === index);
+        });
+    }
+
+    function renderECharts(el, type) {
+        echartInstance = echarts.init(el);
+        let option = {
+            color: ['#FFD93D', '#F4E06D'],
+            tooltip: { trigger: 'axis' },
+            legend: { bottom: 0 }
+        };
+        if (type === 'line') {
+            option.xAxis = { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] };
+            option.yAxis = { type: 'value' };
+            option.series = [{ data: [120, 200, 150, 80, 70], type: 'line', smooth: true, lineStyle: { width: 4 } }];
+        } else if (type === 'bar') {
+            option.xAxis = { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] };
+            option.yAxis = { type: 'value' };
+            option.series = [{ type: 'bar', data: [120, 200, 150, 80, 70], itemStyle: { borderRadius: [10, 10, 0, 0] } }];
+        } else if (type === 'pie') {
+            option.series = [{ type: 'pie', radius: ['40%', '70%'], itemStyle: { borderRadius: 10 }, data: [{ value: 40, name: 'S1' }, { value: 30, name: 'S2' }, { value: 20, name: 'S3' }] }];
+        }
+        echartInstance.setOption(option);
+    }
+
+    function renderAmCharts(el, type) {
+        amRoot = am5.Root.new(el);
+        amRoot.setThemes([am5themes_Animated.new(amRoot)]);
+
+        if (type === 'area') {
+            let chart = amRoot.container.children.push(am5xy.XYChart.new(amRoot, {}));
+            let xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(amRoot, { categoryField: "cat", renderer: am5xy.AxisRendererX.new(amRoot, {}) }));
+            let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(amRoot, { renderer: am5xy.AxisRendererY.new(amRoot, {}) }));
+            let series = chart.series.push(am5xy.LineSeries.new(amRoot, { xAxis: xAxis, yAxis: yAxis, valueYField: "val", categoryXField: "cat", stroke: am5.color(0xFFD93D) }));
+            series.fills.template.setAll({ fillOpacity: 0.3, visible: true, fill: am5.color(0xFFD93D) });
+            let data = [{ cat: "1", val: 10 }, { cat: "2", val: 25 }, { cat: "3", val: 15 }, { cat: "4", val: 30 }];
+            xAxis.data.setAll(data); series.data.setAll(data);
+            series.appear(1000);
+        } else if (type === 'donut') {
+            let chart = amRoot.container.children.push(am5percent.PieChart.new(amRoot, { innerRadius: am5.percent(65) }));
+            let series = chart.series.push(am5percent.PieSeries.new(amRoot, { valueField: "val", categoryField: "cat" }));
+            series.get("colors").set("colors", [am5.color(0xFFD93D), am5.color(0xFBC02D), am5.color(0xEEEEEE)]);
+            series.data.setAll([{ cat: "A", val: 50 }, { cat: "B", val: 30 }, { cat: "C", val: 20 }]);
+            series.appear(1000);
+        }
+    }
+
+    const eList = document.getElementById('menu-list-echarts');
+    const aList = document.getElementById('menu-list-amcharts');
+    chartConfigs.forEach((config, index) => {
+        const li = document.createElement('li');
+        li.className = 'menu-item';
+        li.textContent = config.title;
+        li.onclick = () => initChart(index);
+        if(index < 3) eList.appendChild(li); else aList.appendChild(li);
+    });
+
+    initChart(0);
+    window.onresize = () => echartInstance && echartInstance.resize();
+</script>
+
+</body>
+</html>
