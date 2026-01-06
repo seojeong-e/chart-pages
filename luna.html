@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Yellow Dashboard Demo</title>
+    <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --point-yellow: #FFD93D;
+            --light-yellow: #FFF9DE;
+            --bg-white: #FFFFFF;
+            --text-dark: #444;
+        }
+
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: var(--light-yellow); }
+        
+        /* 사이드바 스타일 수정 */
+        #sidebar { 
+            width: 260px; 
+            background: var(--bg-white); 
+            color: var(--text-dark); 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 2px solid var(--point-yellow);
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+        }
+        
+        #sidebar h2 { 
+            padding: 30px 20px; 
+            margin: 0; 
+            font-size: 1.2rem; 
+            color: #d4a017; 
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        #menu-list { list-style: none; padding: 10px; margin: 0; }
+        
+        .menu-item { 
+            padding: 15px 20px; 
+            cursor: pointer; 
+            margin-bottom: 8px;
+            border-radius: 12px;
+            font-size: 14px; 
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .menu-item:hover { background: var(--light-yellow); color: #000; }
+        
+        /* 활성화된 메뉴 (노란색 강조) */
+        .menu-item.active { 
+            background: var(--point-yellow); 
+            color: #000; 
+            box-shadow: 0 4px 8px rgba(255, 217, 61, 0.4);
+        }
+
+        #main-content { flex: 1; padding: 40px; display: flex; justify-content: center; align-items: center; }
+        
+        /* 차트 컨테이너 스타일 */
+        #chart-container { 
+            width: 100%; 
+            max-width: 900px;
+            height: 600px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            background: white; 
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2> Chart List</h2>
+    <ul id="menu-list"></ul>
+</div>
+
+<div id="main-content">
+    <div id="chart-container"></div>
+</div>
+
+<script>
+    let myChart = null;
+    const container = document.getElementById('chart-container');
+
+    // 4개의 핵심 차트 구성 (노랑 테마 컬러 적용)
+    const chartConfigs = [
+        {
+            title: "주간 매출 현황 (Bar)",
+            option: {
+                color: ['#FFD93D', '#F4E06D'],
+                title: { text: 'Weekly Sales', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['월', '화', '수', '목', '금', '토', '일'] },
+                yAxis: { type: 'value' },
+                series: [{ name: '매출', data: [120, 200, 150, 80, 220, 110, 130], type: 'bar', itemStyle: { borderRadius: [5, 5, 0, 0] } }]
+            }
+        },
+        {
+            title: "카테고리 비율 (Pie)",
+            option: {
+                color: ['#FFD93D', '#FF8B13', '#FFF9DE', '#F4E06D'],
+                title: { text: 'Category Ratio', left: 'center' },
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie', radius: ['40%', '70%'],
+                    data: [
+                        { value: 1048, name: '기획' },
+                        { value: 735, name: '디자인' },
+                        { value: 580, name: '개발' },
+                        { value: 484, name: '마케팅' }
+                    ]
+                }]
+            }
+        },
+        {
+            title: "성장 추이 (Line)",
+            option: {
+                color: ['#FFB100'],
+                title: { text: 'Growth Trend', left: 'center' },
+                xAxis: { type: 'category', data: ['1월', '2월', '3월', '4월', '5월', '6월'] },
+                yAxis: { type: 'value' },
+                series: [{ data: [820, 932, 901, 934, 1290, 1330], type: 'line', smooth: true, areaStyle: { opacity: 0.3 } }]
+            }
+        },
+        {
+            title: "종합 능력치 (Radar)",
+            option: {
+                color: ['#FFD93D'],
+                title: { text: 'Performance Radar', left: 'center' },
+                radar: {
+                    indicator: [{ name: '속도' }, { name: '정확도' }, { name: '창의성' }, { name: '협업' }, { name: '기술' }]
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{ value: [80, 90, 70, 95, 85], name: 'Skill Set' }]
+                }]
+            }
+        }
+    ];
+
+    function loadChart(index) {
+        if (myChart) { myChart.dispose(); }
+        myChart = echarts.init(container);
+        myChart.setOption(chartConfigs[index].option);
+
+        document.querySelectorAll('.menu-item').forEach((item, i) => {
+            item.classList.toggle('active', i === index);
+        });
+    }
+
+    const menuList = document.getElementById('menu-list');
+    chartConfigs.forEach((config, index) => {
+        const li = document.createElement('li');
+        li.className = 'menu-item';
+        li.textContent = config.title;
+        li.onclick = () => loadChart(index);
+        menuList.appendChild(li);
+    });
+
+    loadChart(0);
+    window.onresize = () => myChart && myChart.resize();
+</script>
+
+</body>
+</html>
