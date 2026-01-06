@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ECharts Comprehensive Demo</title>
+    <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+    <style>
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; background: #121212; }
+        #sidebar { width: 280px; background: #1e1e1e; color: #ccc; display: flex; flex-direction: column; border-right: 1px solid #333; }
+        #sidebar h2 { padding: 20px; margin: 0; font-size: 1.1rem; color: #fff; border-bottom: 1px solid #333; }
+        #menu-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
+        .menu-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #2a2a2a; font-size: 13px; transition: 0.2s; }
+        .menu-item:hover { background: #2c2c2c; color: #fff; }
+        .menu-item.active { background: #3498db; color: white; border-bottom-color: #3498db; }
+        #main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; background: #fdfdfd; }
+        #chart-container { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>ECharts Samples</h2>
+    <ul id="menu-list"></ul>
+</div>
+
+<div id="main-content">
+    <div id="chart-container"></div>
+</div>
+
+<script>
+    let myChart = null;
+    const container = document.getElementById('chart-container');
+
+    // 각 차트의 상세 설정 (요청 목록 순서대로 구현)
+    const chartConfigs = [
+        {
+            title: "Bar: Stacked Y-Category",
+            option: {
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                legend: {},
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'value' },
+                yAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                series: [
+                    { name: 'Direct', type: 'bar', stack: 'total', data: [320, 302, 301, 334, 390, 330, 320] },
+                    { name: 'Mail Ad', type: 'bar', stack: 'total', data: [120, 132, 101, 134, 90, 230, 210] }
+                ]
+            }
+        },
+        {
+            title: "Bar: Data Color",
+            option: {
+                xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                yAxis: { type: 'value' },
+                series: [{
+                    data: [120, { value: 200, itemStyle: { color: '#a90000' } }, 150, 80, 70, 110, 130],
+                    type: 'bar'
+                }]
+            }
+        },
+        {
+            title: "Pie: Rich Text",
+            option: {
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie', radius: '55%',
+                    data: [
+                        { value: 1048, name: 'Search Engine' },
+                        { value: 735, name: 'Direct' },
+                        { value: 580, name: 'Email' }
+                    ]
+                }]
+            }
+        },
+        {
+            title: "Line: Smooth",
+            option: {
+                xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                yAxis: { type: 'value' },
+                series: [{ data: [820, 932, 901, 934, 1290, 1330, 1320], type: 'line', smooth: true }]
+            }
+        },
+        {
+            title: "Graph: Webkit Dep",
+            option: {
+                title: { text: 'Graph Webkit Dep' },
+                series: [{
+                    type: 'graph', layout: 'force',
+                    data: [{ name: 'A' }, { name: 'B' }, { name: 'C' }],
+                    links: [{ source: 'A', target: 'B' }, { source: 'B', target: 'C' }],
+                    roam: true, label: { show: true }
+                }]
+            }
+        },
+        {
+            title: "Radar: Custom",
+            option: {
+                radar: {
+                    indicator: [{ name: 'Sales' }, { name: 'Admin' }, { name: 'Tech' }, { name: 'Customer' }, { name: 'Market' }]
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{ value: [4200, 3000, 20000, 35000, 50000], name: 'Budget' }]
+                }]
+            }
+        },
+        {
+            title: "Tree: Basic",
+            option: {
+                series: [{
+                    type: 'tree',
+                    data: [{ name: 'root', children: [{ name: 'child1' }, { name: 'child2' }] }],
+                    top: '1%', left: '7%', bottom: '1%', right: '20%',
+                    symbolSize: 7, label: { position: 'left', verticalAlign: 'middle', align: 'right' }
+                }]
+            }
+        },
+        {
+            title: "Scatter3D (Dark)",
+            theme: 'dark',
+            option: {
+                grid3D: {}, xAxis3D: {}, yAxis3D: {}, zAxis3D: {},
+                series: [{ type: 'scatter3D', data: [[1, 2, 3], [4, 5, 2], [3, 1, 5], [8, 4, 2]] }]
+            }
+        },
+        {
+            title: "Bar3D: Transparent",
+            option: {
+                grid3D: {}, xAxis3D: {type: 'category'}, yAxis3D: {type: 'category'}, zAxis3D: {},
+                series: [{ type: 'bar3D', data: [[0,0,5], [1,1,10], [2,2,7]], itemStyle: { opacity: 0.6 } }]
+            }
+        },
+        {
+            title: "Line: Stack",
+            option: {
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['A', 'B', 'C'] },
+                yAxis: { type: 'value' },
+                series: [
+                    { name: 'S1', type: 'line', stack: 'Total', data: [120, 132, 101] },
+                    { name: 'S2', type: 'line', stack: 'Total', data: [220, 182, 191] }
+                ]
+            }
+        },
+        {
+            title: "Dataset: Link",
+            option: {
+                legend: {}, tooltip: { trigger: 'axis', showContent: false },
+                dataset: {
+                    source: [
+                        ['product', '2012', '2013', '2014'],
+                        ['Milk Tea', 56.5, 82.1, 88.7],
+                        ['Matcha Latte', 51.1, 51.4, 55.1],
+                        ['Cheese Cocoa', 40.1, 62.2, 69.5]
+                    ]
+                },
+                xAxis: { type: 'category' },
+                yAxis: { gridIndex: 0 },
+                series: [{ type: 'line', smooth: true, seriesLayoutBy: 'row' }]
+            }
+        }
+    ];
+
+    function loadChart(index) {
+        if (myChart) { myChart.dispose(); }
+        
+        const config = chartConfigs[index];
+        // 3D 차트나 다크 테마인 경우 배경색 조정
+        container.style.background = config.theme === 'dark' ? '#100c2a' : 'white';
+        
+        myChart = echarts.init(container, config.theme || null);
+        myChart.setOption(config.option);
+
+        // 메뉴 활성화 시각화
+        document.querySelectorAll('.menu-item').forEach((item, i) => {
+            item.classList.toggle('active', i === index);
+        });
+    }
+
+    // 메뉴 생성 로직
+    const menuList = document.getElementById('menu-list');
+    chartConfigs.forEach((config, index) => {
+        const li = document.createElement('li');
+        li.className = 'menu-item';
+        li.textContent = config.title;
+        li.onclick = () => loadChart(index);
+        menuList.appendChild(li);
+    });
+
+    // 초기 첫 번째 차트 로드
+    loadChart(0);
+
+    // 창 크기 조절 대응
+    window.onresize = () => myChart && myChart.resize();
+</script>
+
+</body>
+</html>
